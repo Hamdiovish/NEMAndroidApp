@@ -1,34 +1,64 @@
 package org.nem.nac;
 
-import org.junit.Assert;
+import junit.framework.Assert;
+
+import org.bouncycastle.crypto.digests.SHA3Digest;
+import org.bouncycastle.jcajce.provider.digest.SHA3;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
-import org.nem.core.utils.HexEncoder;
-import org.nem.nac.crypto.KeyProvider;
-import org.nem.nac.models.BinaryData;
-import org.nem.nac.models.EncryptedNacPrivateKey;
-import org.nem.nac.models.NacPrivateKey;
+
+import java.security.MessageDigest;
+import java.security.Security;
 
 public final class HBouncyCastleTest {
 
-    public BinaryData mockBinaryData(String in) {
-        byte[] bytes = HexEncoder.getBytes(in);
-        return new BinaryData(bytes);
+    private static SHA3Digest digest = new SHA3Digest(256);
+    String expected151 = "3a784687a2b2ff9a2c72e22b001d33d9f2e2155a7858ff663b0990d35f14745d";
+    String expected159 = "7f23e6ca181cc91d57245809edb1097a1f14ed011e4a9520a8dd10aa3ef82789";
+
+    //final SHA3.DigestSHA3 sha3 = new SHA3.Digest256();
+    @Test
+    public void testSHA3_151() {
+        String data = "demo";
+        byte[] m = data.getBytes();
+        digest.update(m, 0, m.length);
+        byte[] hash = new byte[digest.getDigestSize()];
+        digest.doFinal(hash, 0);
+        Assert.assertEquals(Hex.toHexString(hash), expected151);
     }
 
     @Test
-    public void testHEncryptDecryptFromDevIsCorrect()
-            throws Exception {
-        final NacPrivateKey originalKey =
-                new NacPrivateKey("32856003a578948c24bd989cab6d2d5af594dcf266f8e373a7d6c12d87df1f4d");
-        final EncryptedNacPrivateKey encrypted1 = new EncryptedNacPrivateKey("ee6045ca86511ec91af5a43a0cf8758463d7da4f38358a6c7d42bb313065c615891f216dca35b92868b6d26971e1a501069ad935dd962ad439284df5de4cde34");
-        final BinaryData salt1 = mockBinaryData("d0479393b7adebbaf7dcbbd78aa693f277f8c9751f09723ba950e334db4b33ce");
-        final String pass1 = "123465";
-
-        final BinaryData eKeyDec1 = KeyProvider.deriveKey(pass1, salt1);
-        final NacPrivateKey decryptedKey1 = encrypted1.decryptKey(eKeyDec1);
-        Assert.assertArrayEquals("Decrypted key Dev-version is different!", originalKey.getRaw(), decryptedKey1.getRaw());
-        System.out.println("Encrypted1: " + encrypted1.toString());
-        System.out.println("Decrypted key from Dev-version OK");
+    public void testSHA3_159() {
+        String data = "demo";
+        byte[] m = data.getBytes();
+        digest.update(m, 0, m.length);
+        byte[] hash = new byte[digest.getDigestSize()];
+        digest.doFinal(hash, 0);
+        Assert.assertEquals(Hex.toHexString(hash), expected159);
     }
 
+    @Test
+    public void testSHA3_fix() {
+        String data = "demo";
+        byte[] hash = hash("KECCAK-256", data.getBytes());
+        Assert.assertEquals(Hex.toHexString(hash), expected151);
+    }
+
+    private static byte[] hash(final String algorithm, final byte[] inputs) {
+        MessageDigest digest = null;
+        try {
+            Security.addProvider(new BouncyCastleProvider());
+            MessageDigest messageDigest = MessageDigest.getInstance(algorithm, "BC");
+            byte[] hashedString = messageDigest.digest(inputs);
+            return hashedString;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 }
+

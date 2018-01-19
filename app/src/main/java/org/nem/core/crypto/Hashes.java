@@ -27,7 +27,11 @@ public class Hashes {
 	 * @throws CryptoException if the hash operation failed.
 	 */
 	public static byte[] sha3_256(final byte[]... inputs) {
-		return hash("SHA3-256", inputs);
+		//return hash("SHA3-256", inputs);
+		//original KECCAK VS FIPS 202
+		//Link https://medium.com/@ConsenSys/are-you-really-using-sha-3-or-old-code-c5df31ad2b0
+		//Not updated to the standard 
+		return hash("KECCAK-256", inputs);
 	}
 
 	/**

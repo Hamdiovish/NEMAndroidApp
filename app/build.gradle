@@ -150,6 +150,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
 
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.59'
+    //compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.51'
 
 }
 
