@@ -28,7 +28,7 @@ public final class AboutDialogFragment extends NacBaseDialogFragment {
 			Bundle savedInstanceState) {
 		final View layout = super.onCreateView(inflater, container, savedInstanceState);
 		final TextView version = (TextView)layout.findViewById(R.id.field_version);
-		String msg = BuildConfig.VERSION_NAME;
+		String msg = String.format("%s%s (%d)", BuildConfig.VERSION_NAME, BuildConfig.FLAVOR, BuildConfig.VERSION_CODE);
 		msg += "\n\nNote - this is enhance NEM Wallet+ version, with revised transaction fee.\n" +
 				"Crash report will send to developer. No private keys or passwords are being sent.\n";
 		version.setText(msg);

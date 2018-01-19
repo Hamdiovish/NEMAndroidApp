@@ -3,6 +3,7 @@
 	<dimen name="default_side_padding">16dp</dimen>
 	<dimen name="margin_x_small">4dp</dimen>
 	<dimen name="margin_small">8dp</dimen>
+	<dimen name="margin_default_small">4dp</dimen>
 	<dimen name="margin_default">16dp</dimen>
 	<dimen name="margin_large">24dp</dimen>
 	<dimen name="margin_x_large">32dp</dimen>

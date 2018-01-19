@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.annimon.stream.Stream;
+import com.google.gson.JsonObject;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Response;
 
@@ -16,6 +17,7 @@ import org.nem.nac.common.utils.JsonUtils;
 import org.nem.nac.models.api.ErrorObjectApiDto;
 import org.nem.nac.models.api.HarvestingInfoArrayApiDto;
 import org.nem.nac.models.api.RequestAnnounceApiDto;
+import org.nem.nac.models.api.RequestAnnounceHarvestApiDto;
 import org.nem.nac.models.api.RequestResultApiDto;
 import org.nem.nac.models.api.account.AccountMetaDataPairApiDto;
 import org.nem.nac.models.api.transactions.AnnounceRequestResultApiDto;
@@ -86,6 +88,18 @@ public final class NisApi {
 		Map<String, String> query = new HashMap<>();
 		query.put("address", account.getRaw());
 		return performGetRequest(server, Paths.HARVEST_INFO_GET, HarvestingInfoArrayApiDto.class, Paths.HARVEST_INFO_GET, query, true);
+	}
+
+	public ServerResponse<AnnounceRequestResultApiDto> setHarvestLock(final Server server, final RequestAnnounceHarvestApiDto requestAnnounce, final boolean lock)
+			throws ServerErrorException, NoNetworkException, IOException {
+		AssertUtils.notNull(requestAnnounce);
+
+		if (lock) {
+			return performPostRequest(server, Paths.HARVEST_UNLOCK, requestAnnounce, AnnounceRequestResultApiDto.class, Paths.HARVEST_UNLOCK, null, true);
+		} else {
+			return performPostRequest(server, Paths.HARVEST_LOCK, requestAnnounce, AnnounceRequestResultApiDto.class, Paths.HARVEST_LOCK, null, true);
+		}
+
 	}
 
 	public ServerResponse<AnnounceRequestResultApiDto> announceTransaction(final Server server, final RequestAnnounceApiDto requestAnnounce)
@@ -189,6 +203,7 @@ public final class NisApi {
 		}
 	}
 
+
 	private static final class Paths {
 		public static final String HEARTBEAT                = "/heartbeat";
 		public static final String TRANSACTIONS_ALL         = "/account/transfers/all";
@@ -196,5 +211,7 @@ public final class NisApi {
 		public static final String ACCOUNT_GET              = "/account/get";
 		public static final String ANNOUNCE_TRANSACTION = "/transaction/announce";
 		public static final String HARVEST_INFO_GET     = "/account/harvests";
+		public static final String HARVEST_LOCK       = "/account/lock";
+		public static final String HARVEST_UNLOCK     = "/account/unlock";
 	}
 }

@@ -71,6 +71,28 @@
 						/>
 				</LinearLayout>
 
+				<!--name_address label-->
+				<TextView
+					android:id="@+id/label_name_address"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:paddingLeft="@dimen/margin_default"
+					android:paddingRight="@dimen/margin_default"
+					android:layout_marginTop="@dimen/margin_default"
+					android:text="@string/input_hint_create_account_name"
+					/>
+				<!--name_address field-->
+				<TextView
+					android:id="@+id/textview_name_address"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:paddingLeft="@dimen/margin_default"
+					android:paddingRight="@dimen/margin_default"
+					android:layout_marginTop="@dimen/margin_default_small"
+					android:textIsSelectable="true"
+					android:textColor="@color/default_black"
+					/>
+
 				<!--Pub key label-->
 				<TextView
 					android:id="@+id/label_public_key"
@@ -88,7 +110,7 @@
 					android:layout_height="wrap_content"
 					android:paddingLeft="@dimen/margin_default"
 					android:paddingRight="@dimen/margin_default"
-					android:layout_marginTop="@dimen/margin_default"
+					android:layout_marginTop="@dimen/margin_default_small"
 					android:textIsSelectable="true"
 					android:textColor="@color/default_black"
 					/>
@@ -110,7 +132,7 @@
 					android:layout_height="wrap_content"
 					android:paddingLeft="@dimen/margin_default"
 					android:paddingRight="@dimen/margin_default"
-					android:layout_marginTop="@dimen/margin_default"
+					android:layout_marginTop="@dimen/margin_default_small"
 					android:textIsSelectable="true"
 					android:textColor="@color/default_black"
 					android:visibility="gone"

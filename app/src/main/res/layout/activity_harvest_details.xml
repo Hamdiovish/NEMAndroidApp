@@ -87,13 +87,27 @@
 					android:textSize="@dimen/text_size_medium"
 					/>
 				<!--Delegated Harvesting-->
-				<TextView
-					android:id="@+id/textview_delegated_harvesting"
+				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_marginTop="@dimen/margin_large"
-					android:textSize="@dimen/text_size_medium"
-					/>
+					android:gravity="center_vertical|center_horizontal"
+					android:orientation="horizontal"
+					android:layout_marginTop="@dimen/margin_large">
+					<TextView
+						android:id="@+id/textview_delegated_harvesting"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:gravity="left"
+						android:layout_weight="1"
+						android:textSize="@dimen/text_size_medium"
+						/>
+					<CheckBox
+						android:id="@+id/checkBox_harvest"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:checked="false"
+						/>
+				</LinearLayout>
 				<!--Commented to better times (Hidden as discussed in #86)-->
 				<!--Delegated key label-->
 				<!--<TextView-->

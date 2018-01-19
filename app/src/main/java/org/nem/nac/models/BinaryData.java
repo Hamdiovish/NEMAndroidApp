@@ -81,7 +81,9 @@ public class BinaryData implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {dest.writeByteArray(this.rawData);}
 
-	protected BinaryData(Parcel in) {this.rawData = in.createByteArray();}
+	protected BinaryData(Parcel in) {
+		this.rawData = in.createByteArray();
+	}
 
 	public static final Parcelable.Creator<BinaryData> CREATOR = new Parcelable.Creator<BinaryData>() {
 		public BinaryData createFromParcel(Parcel source) {return new BinaryData(source);}

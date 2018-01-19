@@ -439,6 +439,34 @@ public final class MessagesActivity extends NacBaseActivity {
 	 */
 	private void onSendMessageClick_pre(final View clicked){
 
+		final Optional<Xems> amount1 = _amountInput.getAmount();
+		if (!amount1.isPresent()) {
+			enableSendButton(true);
+			return;
+		}
+
+		final String msgText = _messageInput.getText().toString();
+		byte[] msgData = msgText.getBytes();
+
+		final MessageDraft messageDraft = MessageDraft.create(msgData);
+		if (messageDraft != null) {
+			if (!MessageDraft.isLengthValid(msgText, _encryptMsg)) {
+				InputErrorUtils.setErrorState(_messageInput, R.string.errormessage_message_too_long);
+				_messageInput.requestFocus();
+				enableSendButton(true);
+				return;
+			}
+		}
+		if (messageDraft != null && _encryptMsg) {
+			new EncryptMessageAsyncTask(this, _meAcc.privateKey, _companion, messageDraft)
+					.withCompleteCallback(this::onMessageEncrypted)
+					.execute();
+		}  else {
+			confirmTransactionDialog();
+		}
+	}
+
+	private void confirmTransactionDialog(){
 		LayoutInflater inflater = getLayoutInflater();
 		View views = inflater.inflate(R.layout.dialog_confirm_newtransaction, null);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -509,15 +537,25 @@ public final class MessagesActivity extends NacBaseActivity {
 		}
 		if (messageDraft != null && _encryptMsg) {
 			new EncryptMessageAsyncTask(this, _meAcc.privateKey, _companion, messageDraft)
-					.withCompleteCallback(this::onMessageEncrypted)
+					.withCompleteCallback(this::onMessageEncrypted2)
 					.execute();
-		}
-		else {
+		} else {
 			announceTransfer(amount.get(), messageDraft);
 		}
 	}
 
 	private void onMessageEncrypted(final EncryptMessageAsyncTask task, final AsyncResult<MessageDraft> result) {
+		if (!result.getResult().isPresent()) {
+			Timber.e("Failed to encrypt message. Task returned no result!");
+			Toast.makeText(this, R.string.errormessage_failed_to_create_transaction, Toast.LENGTH_SHORT).show();
+			enableSendButton(true);
+			return;
+		}
+		//announceTransfer(_amountInput.getAmount().get(), result.getResult().get());
+		confirmTransactionDialog();
+	}
+
+	private void onMessageEncrypted2(final EncryptMessageAsyncTask task, final AsyncResult<MessageDraft> result) {
 		if (!result.getResult().isPresent()) {
 			Timber.e("Failed to encrypt message. Task returned no result!");
 			Toast.makeText(this, R.string.errormessage_failed_to_create_transaction, Toast.LENGTH_SHORT).show();

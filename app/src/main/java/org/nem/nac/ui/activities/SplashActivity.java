@@ -1,34 +1,45 @@
 package org.nem.nac.ui.activities;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
+import com.google.gson.Gson;
 
 import org.nem.nac.BuildConfig;
 import org.nem.nac.R;
 import org.nem.nac.application.AppConstants;
 import org.nem.nac.application.AppHost;
 import org.nem.nac.application.AppSettings;
+import org.nem.nac.application.Share;
 import org.nem.nac.datamodel.NacPersistenceRuntimeException;
+import org.nem.nac.datamodel.repositories.AccountRepository;
 import org.nem.nac.datamodel.repositories.AppPasswordRepository;
+import org.nem.nac.models.account.Account;
 import org.nem.nac.servers.ServerFinder;
 import org.nem.nac.ui.dialogs.ChangeAppPasswordDialogFragment;
 import org.nem.nac.ui.dialogs.MainNetStartupWarningDialogFragment;
+import org.nem.nac.ui.utils.Toaster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import timber.log.Timber;
 
 public final class SplashActivity extends NacBaseActivity {
-
+	private String TAG="SplashActivity";
 	private boolean _visible    = false;
 	private boolean _wasResumed = false;
 	private View                                _coordinator;
@@ -58,10 +69,10 @@ public final class SplashActivity extends NacBaseActivity {
 		}
 
 		TextView ver=(TextView)findViewById(R.id.version);
-		String msg = BuildConfig.VERSION_NAME;
+		String msg = String.format("%s%s (%d)", BuildConfig.VERSION_NAME, BuildConfig.FLAVOR, BuildConfig.VERSION_CODE);
 		ver.setText(msg);
 
-		//checkPermissions();
+		checkPermissions();
 	}
 
 	@Override
@@ -128,10 +139,14 @@ public final class SplashActivity extends NacBaseActivity {
 		if (_visible && !isFinishing()) {
 			try {
 				if (new AppPasswordRepository().get().isPresent()) {
-					startActivity(LoginActivity.getIntent(this, null, false));
-					finish();
-				}
-				else {
+                    Share.uriData=chekURiCall();
+					if (Share.uriData!=null && Share.uriData.getHost().equals("getaccounts")) {
+						doGetAccounts();
+					} else {
+						startActivity(LoginActivity.getIntent(this, null, false));
+						finish();
+					}
+				} else {
 					if (_pwdDialog == null) {
 						_pwdDialog = ChangeAppPasswordDialogFragment.create(false)
 								.setOnPasswordChangedListener(this::onPasswordSet);
@@ -146,7 +161,7 @@ public final class SplashActivity extends NacBaseActivity {
 		}
 	};
 
-	//kwl Check all permission ####################################
+	// Check all permission ####################################
 	public static final int MULTIPLE_PERMISSIONS = 10; // code you want.
 
 	String[] permissions= new String[]{
@@ -205,5 +220,58 @@ public final class SplashActivity extends NacBaseActivity {
 		intent.putExtra(EXTRA_BOOL_EXIT_ATTEMPT, true);
 		startActivity(intent); */
 	}
-	//kwl Check all permission ####################################
+	// Check all permission ####################################
+
+	/// URi call ########################################################################
+	private Uri chekURiCall(){
+		Share.quitUriAppCall=false;
+		Intent intent = getIntent();
+		String action = intent.getAction();
+		Uri data = intent.getData();
+		if (data!=null) {
+			String scheme = data.getScheme();
+			String host = data.getHost();
+			if (host.equals("transaction")) {
+				int port = data.getPort();
+				String da = data.getQuery();
+				String password = data.getQueryParameter("password");
+				String recipient = data.getQueryParameter("recipient");
+				String amount = data.getQueryParameter("amount");
+				String message = data.getQueryParameter("message");
+				String ss = String.format("%s==>%s=%s=%s=%s", host, password, recipient, amount, message);
+				Log.d(TAG, "110- " + ss);
+				//Toaster.instance().show("data: " + ss);
+				return data;
+			} else if (host.equals("getaccounts")){
+				return data;
+			}
+		}
+		return null;
+	}
+
+	private void doGetAccounts(){
+		final List<Account> accounts = new AccountRepository().getAllSorted();
+		Map<String, String> accountMap=new HashMap<>();
+		for (Account acc:accounts){
+			accountMap.put(acc.publicData.address.getRaw(),acc.name);
+		}
+		String jsonMapAccounts=null;
+		if (accountMap.size()>0) {
+			jsonMapAccounts = new Gson().toJson(accountMap);
+			Intent data1 = new Intent();
+			data1.putExtra("accounts",jsonMapAccounts);
+			setResult(RESULT_OK,data1);
+			finish();
+			Share.uriData=null;
+			onBackPressed();
+		} else {
+			Intent data1 = new Intent();
+			data1.putExtra("accounts","");
+			setResult(RESULT_CANCELED,data1);
+			finish();
+			Share.uriData=null;
+			onBackPressed();
+		}
+	}
+
 }

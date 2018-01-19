@@ -109,6 +109,7 @@ public final class CreateInvoiceFragment extends BaseTabFragment {
 			final Xems amount;
 			try {
 				amount = Xems.fromXems(NumberUtils.parseDouble(_amountInput.getText().toString()));
+				Timber.d(String.format("Amount: "));
 			} catch (NumberFormatException e) {
 				Timber.e(e, "Failed to read amount!");
 				Toast.makeText(getActivity(), R.string.errormessage_error_occured, Toast.LENGTH_SHORT).show();

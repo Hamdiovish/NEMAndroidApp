@@ -30,11 +30,15 @@ public final class PrivateKeyInput extends EditText {
 		super(context, attrs, defStyleAttr);
 		init();
 	}
-
+// 009c5c6a5dfeae604f0307618083b6b0a67649e4500331da1260616f18a7338205
 	public boolean validate() {
 		final String pKey = getText().toString();
 		try {
 			if (pKey.isEmpty()) {
+				setError(getContext().getString(R.string.errortext_invalid_private_key));
+				return false;
+			}
+			if (pKey.length()<60) {
 				setError(getContext().getString(R.string.errortext_invalid_private_key));
 				return false;
 			}

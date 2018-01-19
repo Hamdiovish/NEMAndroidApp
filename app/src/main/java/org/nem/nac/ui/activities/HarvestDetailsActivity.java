@@ -8,6 +8,7 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -18,6 +19,9 @@ import org.nem.nac.application.AppConstants;
 import org.nem.nac.application.AppSettings;
 import org.nem.nac.common.async.AsyncResult;
 import org.nem.nac.common.utils.DateUtils;
+import org.nem.nac.datamodel.repositories.AccountRepository;
+import org.nem.nac.models.AnnounceResult;
+import org.nem.nac.models.account.Account;
 import org.nem.nac.models.api.HarvestInfoApiDto;
 import org.nem.nac.models.api.HarvestingInfoArrayApiDto;
 import org.nem.nac.models.api.account.AccountMetaDataApiDto;
@@ -25,6 +29,9 @@ import org.nem.nac.models.api.account.AccountMetaDataPairApiDto;
 import org.nem.nac.models.primitives.AddressValue;
 import org.nem.nac.tasks.GetAccountInfoAsyncTask;
 import org.nem.nac.tasks.GetHarvestInfoDataAsyncTask;
+import org.nem.nac.tasks.SendTransactionAsyncTask;
+import org.nem.nac.tasks.SetHarvestLockTask;
+import org.nem.nac.ui.dialogs.ConfirmDialogFragment;
 
 import timber.log.Timber;
 
@@ -38,6 +45,8 @@ public final class HarvestDetailsActivity extends NacBaseActivity {
 	private LinearLayout _blocksList;
 	private AddressValue _address;
 	private TextView     _poiSymbol;
+	private CheckBox     _harvestlock;
+	private Account      _meAcc;
 
 	@Override
 	protected int getActivityTitle() {
@@ -74,6 +83,62 @@ public final class HarvestDetailsActivity extends NacBaseActivity {
 		_delegatedHarvestingStatusLabel = (TextView)findViewById(R.id.textview_delegated_harvesting);
 		_blocksList = (LinearLayout)findViewById(R.id.linear_list_blocks);
 		_harvestedBlocksLabel = (TextView)findViewById(R.id.label_harvested_blocks);
+		_harvestlock = (CheckBox) findViewById(R.id.checkBox_harvest);
+		_harvestlock.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if(_harvestlock.isChecked()){
+					System.out.println("142- Checked");
+					setHarvestLock(true);  // unlock
+				}else{
+					System.out.println("142- Un-Checked");
+					setHarvestLock(false);  // lock
+				}
+			}
+		});
+		_harvestlock.setVisibility(View.INVISIBLE);
+
+		final Optional<Account> account = new AccountRepository().find(_address);
+		if (!account.isPresent()) {
+			Timber.w("Local account not found: %s", _address);
+			_address = null;
+			return;
+		}
+		_meAcc = account.get();
+	}
+
+	private void setHarvestLock(boolean lock){
+		/*new SetHarvestLockTask(this, _address, lock, _meAcc.privateKey)
+				.withCompleteCallback(this::onSetHarvestLock)
+				.execute();*/
+
+		new SetHarvestLockTask(this,  _address, lock, _meAcc.privateKey)
+				.withCompleteCallback((sendTask, sendResult) -> {
+					if (!sendResult.getResult().isPresent()) {
+						Timber.d("Bad result");
+						return;
+					}
+					final AnnounceResult announceResult = sendResult.getResult().get();
+					if (!announceResult.successful) {
+						ConfirmDialogFragment.create(true, null, getString(R.string.dialog_transaction_announce_failed, announceResult.message), null)
+								.show(getFragmentManager(), null);
+						return;
+					}
+					/*ConfirmDialogFragment.create(true, null, R.string.dialog_message_transaction_announced, null)
+							.setOnDismissListener(dialog -> {
+								finish();
+								startActivity(new Intent(this, DashboardActivity.class));
+							})
+							.show(getFragmentManager(), null);*/
+				})
+				.execute();
+	}
+
+	private void onSetHarvestLock(final SetHarvestLockTask task, final AsyncResult<HarvestingInfoArrayApiDto> result){
+		new GetAccountInfoAsyncTask(this, _address)
+				.withCompleteCallback(this::onAccountInfo)
+				.execute();
 	}
 
 	private void setCustomFontFor(final TextView label) {
@@ -101,9 +166,13 @@ public final class HarvestDetailsActivity extends NacBaseActivity {
 			return;
 		}
 
+		getHarvestInfo(result);
+	}
+
+	private void getHarvestInfo(final AsyncResult<AccountMetaDataPairApiDto> result){
 		new GetHarvestInfoDataAsyncTask(this, _address)
-			.withCompleteCallback(this::onHarvestInfo)
-			.execute();
+				.withCompleteCallback(this::onHarvestInfo)
+				.execute();
 
 		final AccountMetaDataPairApiDto accountInfo = result.getResult().get();
 		_poiLabel.setText(getString(R.string.label_poi, accountInfo.account.importance * 10000.0f));

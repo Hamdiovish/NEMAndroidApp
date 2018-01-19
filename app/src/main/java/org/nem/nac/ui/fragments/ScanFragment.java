@@ -167,6 +167,7 @@ public final class ScanFragment extends BaseTabFragment implements QRCodeReaderV
 				getActivity().finish();
 				break;
 			}
+
 			case USER_INFO: {
 				final QrUserInfo qrUserInfo = (QrUserInfo)qrData;
 				UserInfoImportDialogFragment.create(qrUserInfo.name, qrUserInfo.address)

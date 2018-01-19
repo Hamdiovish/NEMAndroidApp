@@ -46,6 +46,7 @@ public final class ExportAccountActivity extends NacBaseActivity {
 	private TextView    _labelShowPrivKey;
 	private TextView    _privateKeyField;
 	private TextView _publicKeyField;
+	private TextView _nameAddressField;
 	private ScrollView  _scrollView;
 	private ViewGroup              _mainLayout;
 	private Account                _account;
@@ -86,6 +87,7 @@ public final class ExportAccountActivity extends NacBaseActivity {
 		_labelShowPrivKey = (TextView)findViewById(R.id.label_private_key);
 		_privateKeyField = (TextView)findViewById(R.id.textview_private_key);
 		_publicKeyField = (TextView)findViewById(R.id.textview_public_key);
+		_nameAddressField = (TextView)findViewById(R.id.textview_name_address);
 
 		// Me
 		final Optional<AddressValue> me = AppSettings.instance().readLastUsedAccAddress();
@@ -105,10 +107,10 @@ public final class ExportAccountActivity extends NacBaseActivity {
 		_account = account.get();
 		if (_account.publicData.publicKey != null) {
 			_publicKeyField.setText(_account.publicData.publicKey.toHexStr());
-		}
-		else {
+		} else {
 			_publicKeyField.setText(R.string.label_public_key_no_public_key);
 		}
+		_nameAddressField.setText(_account.publicData.address.toNameOrDashed());
 		final Optional<AppPassword> appPwd = new AppPasswordRepository().get();
 		if (!appPwd.isPresent()) {
 			Timber.e("App password not present!");

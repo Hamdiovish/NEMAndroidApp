@@ -2,6 +2,7 @@ package org.nem.nac.models.transactions;
 
 import android.support.annotation.NonNull;
 
+import org.nem.core.utils.HexEncoder;
 import org.nem.nac.common.SizeOf;
 import org.nem.nac.common.enums.MultisigCosignatoryModificationType;
 import org.nem.nac.common.utils.ConvertUtils;
@@ -10,6 +11,8 @@ import org.nem.nac.models.NacPublicKey;
 
 import java.io.IOException;
 import java.io.OutputStream;
+
+import timber.log.Timber;
 
 public final class AggregateModification implements Comparable<AggregateModification> {
 
@@ -29,12 +32,16 @@ public final class AggregateModification implements Comparable<AggregateModifica
 			throws IOException {
 		// Length of cosignatory modification structure
 		stream.write(ConvertUtils.toLeBytes(getLength()));
+		Timber.d("WriteOS 110: B1:    "+ HexEncoder.getString(ConvertUtils.toLeBytes(getLength())));
 		// Modification type
 		stream.write(ConvertUtils.toLeBytes(type.getValue()));
+		Timber.d("WriteOS 110: B2:    "+ HexEncoder.getString(ConvertUtils.toLeBytes(type.getValue())));
 		// Length of cosignatory's public key byte array
 		stream.write(ConvertUtils.toLeBytes(cosignatory.length()));
+		Timber.d("WriteOS 110: B3:    "+ HexEncoder.getString(ConvertUtils.toLeBytes(cosignatory.length())));
 		// Public key bytes of cosignatory
 		stream.write(cosignatory.getRaw());
+		Timber.d("WriteOS 110: B4:    "+ HexEncoder.getString(cosignatory.getRaw()));
 	}
 
 	@Override

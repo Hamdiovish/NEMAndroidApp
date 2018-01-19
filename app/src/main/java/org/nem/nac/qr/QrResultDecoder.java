@@ -5,11 +5,15 @@ import android.support.annotation.StringRes;
 import com.annimon.stream.function.BiConsumer;
 import com.annimon.stream.function.Consumer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.nem.nac.R;
 import org.nem.nac.application.AppHost;
 import org.nem.nac.common.utils.JsonUtils;
+import org.nem.nac.models.primitives.AddressValue;
 import org.nem.nac.models.qr.BaseQrData;
 import org.nem.nac.models.qr.QrDto;
+import org.nem.nac.models.qr.QrInvoice;
 
 import timber.log.Timber;
 
@@ -33,13 +37,29 @@ public final class QrResultDecoder {
 
 	private String checkInvoice(String json){
 		//QrDto dto;
-		if (!json.contains("name")){
+		if (!json.contains("name")){  // if Json missing name field, add name by code
 			String jsonBegin = json.substring(0,json.indexOf("}}"));
 			String jsonEnd = json.substring(json.indexOf("}}"));
 			json= jsonBegin + ",\"name\":\" \"" + jsonEnd;
 			Timber.d("%s", json);
 		}
-
+		if (json.contains("amount\" : \"")) {  // in IOS QR "amount"="1000000", rmove amount ""
+			try {
+				JSONObject reader = new JSONObject(json);
+				int type=reader.getInt("type");
+				JSONObject data = new JSONObject(reader.getString("data"));
+				int v=reader.getInt("v");
+				String name=data.getString("name");
+				String amount=data.getString("amount");
+				String addr=data.getString("addr");
+				String msg=data.getString("msg");
+				String jjson=String.format("{\"v\":%d, \"type\":%d, \"data\":{\"addr\":\"%s\", \"amount\":%s, \"msg\":\"%s\", \"name\":\"%s\"}}",
+						v, type, addr, amount, msg, name );
+				json=jjson;
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
 		return json;
 	}
 
@@ -50,7 +70,7 @@ public final class QrResultDecoder {
 			return;
 		}
 		String json = qrResult.text;
-		if (json.contains("\"type\":2")){
+		if (json.contains("\"type\":2") || json.contains("\"type\" : 2")){
 			json=checkInvoice(json);
 		}
 		QrDto dto;

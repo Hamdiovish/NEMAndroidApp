@@ -56,6 +56,7 @@ public final class AesCryptographer {
 		// Setup IV.
 		final byte[] ivData = new byte[BLOCK_SIZE];
 		this.random.nextBytes(ivData);
+		System.out.println("ivData: " + ivData.toString());
 
 		// Setup block cipher.
 		final BufferedBlockCipher cipher = this.setupBlockCipher(key.getRaw(), ivData, true);

@@ -19,6 +19,8 @@ package com.google.zxing.client.android.camera.open;
 import android.hardware.Camera;
 import android.util.Log;
 
+import org.nem.nac.ui.utils.Toaster;
+
 /**
  * Abstraction over the {@link Camera} API that helps open them and return their metadata.
  */
@@ -76,7 +78,14 @@ public final class OpenCameraInterface {
 		Camera camera;
 		if (index < numCameras) {
 			Log.i(TAG, "Opening camera #" + index);
-			camera = Camera.open(index);
+			//camera = Camera.open(index);
+			try {
+				camera = Camera.open(index);
+			}
+			catch(Exception e) {
+				Toaster.instance().show("Camera hardware not detetced, try to reboot your device!");
+				return null;
+			}
 		}
 		else {
 			if (explicitRequest) {

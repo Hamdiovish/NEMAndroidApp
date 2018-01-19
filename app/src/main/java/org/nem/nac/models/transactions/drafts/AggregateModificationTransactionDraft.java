@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 
+import org.nem.core.utils.HexEncoder;
 import org.nem.nac.application.AppConstants;
 import org.nem.nac.common.SizeOf;
 import org.nem.nac.common.enums.MultisigCosignatoryModificationType;
@@ -20,6 +21,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import timber.log.Timber;
 
 public final class AggregateModificationTransactionDraft extends AbstractTransactionDraft {
 
@@ -56,10 +59,11 @@ public final class AggregateModificationTransactionDraft extends AbstractTransac
 		final int modificationsCount = _modifications.size();
 		final boolean minCosigsModificationPresent = this.minCosignatoriesRelativeChange != 0;
 		//fee.addXems(10 + 6 * modificationsCount);
-		fee.addXems(10* AppConstants.MinimumFee_factor + 3 * AppConstants.MinimumFee_factor * modificationsCount);
+		fee.addXems(10* AppConstants.MinimumFee_factor + AppConstants.MinimumFee_basic *
+				AppConstants.MinimumFee_factor * modificationsCount);
 		if (minCosigsModificationPresent) {
 			//fee.addXems(6);
-			fee.addXems(3*AppConstants.MinimumFee_factor);
+			fee.addXems(AppConstants.MinimumFee_basic*AppConstants.MinimumFee_factor);
 		}
 		return fee;
 	}
@@ -68,8 +72,11 @@ public final class AggregateModificationTransactionDraft extends AbstractTransac
 	protected void serializeAdditional(@NonNull final ByteArrayOutputStream os)
 			throws IOException {
 		// Number of cosignatory modifications
+
 		final int modificationsNumber = _modifications.size();
+		Timber.d("WriteOS 110: A1:"+ HexEncoder.getString(os.toByteArray()));
 		writeAsLeBytes(os, modificationsNumber);
+		Timber.d("WriteOS 110: A2:"+ HexEncoder.getString(os.toByteArray()));
 		final List<AggregateModification> sortedModifications = Stream.of(_modifications)
 				.sorted()
 				.collect(Collectors.toList());
@@ -78,9 +85,11 @@ public final class AggregateModificationTransactionDraft extends AbstractTransac
 			mod.serialize(os);
 		}
 		writeAsLeBytes(os, minCosignatoriesRelativeChange != 0 ? SizeOf.INT : 0);
+		Timber.d("WriteOS 110: A3:"+ HexEncoder.getString(os.toByteArray()));
 		if (minCosignatoriesRelativeChange != 0) {
 			writeAsLeBytes(os, minCosignatoriesRelativeChange);
 		}
+		Timber.d("WriteOS 110: A4:"+ HexEncoder.getString(os.toByteArray()));
 		// Note: BloodyRookie:
 		// It should be possible to leave out the min cosignatories part in case there is no change for min cosignatories
 		// (leave out both, the 'Length" field and the 'relative change' field).

@@ -1,6 +1,7 @@
 package org.nem.nac.ui.activities;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -26,8 +27,10 @@ import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 
 import org.nem.nac.R;
+import org.nem.nac.application.AppConstants;
 import org.nem.nac.application.AppHost;
 import org.nem.nac.application.AppSettings;
+import org.nem.nac.application.Share;
 import org.nem.nac.common.async.AsyncResult;
 import org.nem.nac.common.enums.AccountType;
 import org.nem.nac.common.exceptions.NacException;
@@ -60,7 +63,7 @@ import java.util.List;
 import timber.log.Timber;
 
 public final class NewTransactionActivity extends NacBaseActivity {
-
+	private String TAG="NewTransactionActivity";
 	public static final String EXTRA_STR_NAME   = NewTransactionActivity.class.getName() + ".e-name";
 	public static final String EXTRA_STR_ADDRESS   = NewTransactionActivity.class.getName() + ".e-address";
 	public static final String EXTRA_DOUBLE_AMOUNT = NewTransactionActivity.class.getName() + ".e-amount";
@@ -98,8 +101,13 @@ public final class NewTransactionActivity extends NacBaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		finish();
-		startActivity(new Intent(this, DashboardActivity.class));
+		if (Share.uriData!=null && Share.uriData.getHost().equals("transaction")){
+			Share.quitUriAppCall=true;
+			Share.feedBackCancel(this);
+		} else {
+			finish();
+			startActivity(new Intent(this, DashboardActivity.class));
+		}
 	}
 
 	@Override
@@ -164,6 +172,7 @@ public final class NewTransactionActivity extends NacBaseActivity {
 		_signer = _meAcc.publicData.publicKey;
 
 		getAccountInfo();
+
 	}
 
 	@Override
@@ -213,6 +222,25 @@ public final class NewTransactionActivity extends NacBaseActivity {
 			}
 		} catch (Throwable throwable) {
 			_messageInput.setText(messageStr);
+		}
+		setUriData();
+	}
+
+	private void setUriData(){
+		if (Share.uriData!=null && Share.uriData.getHost().equals("transaction")){
+			Uri data=Share.uriData;
+			String recipient=data.getQueryParameter("recipient");
+			String amount=data.getQueryParameter("amount");
+			String message=data.getQueryParameter("message");
+			if (recipient!=null)
+				if (recipient.length()>0)
+					_recipientInput.setText(recipient);
+			if (amount!=null)
+				if (amount.length()>0)
+					_amountInput.setText(amount);
+			if (message!=null)
+				if (message.length()>0)
+					_messageInput.setText(message);
 		}
 	}
 
@@ -477,10 +505,7 @@ public final class NewTransactionActivity extends NacBaseActivity {
 				_encryptMsg ? Ed25519Helper.getEncryptedMessageLength(message.toString())
 						: message.toString().getBytes().length;
 		final Xems minFee = TransferTransactionDraft.calculateMinimumFee(amount, payloadLength);
-		//Log.d("122-", "Payload: "+String.valueOf(payloadLength));
-	/*	if (!_signer.equals(_initiator)) {
-			minFee.addXems(6);
-		} */
+		Log.d("122-", "Payload: "+String.valueOf(payloadLength));
 
 		final String feeLabelStr = getString(R.string.label_fee_colon,
 				Integer.toHexString(getResources().getColor(R.color.official_green) & 0x00ffffff),
@@ -512,10 +537,15 @@ public final class NewTransactionActivity extends NacBaseActivity {
 		public void afterTextChanged(final Editable s) {
 			final Xems amount = _feeInput.getAmount().orElse(Xems.ZERO);
 			final long amountXems = amount.getIntegerPart();
-			if (amountXems>10)
-				_feeInput.setText("10");
+			if (amountXems> AppConstants.MinimumFee_max_input)
+				_feeInput.setText(String.valueOf(AppConstants.MinimumFee_max_input));
 				//_feeInput.setText("99");
 
+			String ss=_feeInput.getText().toString();  // limit to max 5 char
+			if (ss.length()>5) {
+				_feeInput.setText(ss.substring(0, 5));
+				_feeInput.setSelection(5);
+			}
 		}
 	};
 

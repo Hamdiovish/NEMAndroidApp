@@ -1,9 +1,11 @@
 package org.nem.nac.ui.activities;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,11 +15,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.annimon.stream.Collectors;
+import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 import com.terlici.dragndroplist.DragNDropListView;
 
 import org.nem.nac.R;
+import org.nem.nac.application.AppConstants;
 import org.nem.nac.application.AppSettings;
+import org.nem.nac.application.Share;
 import org.nem.nac.common.utils.StringUtils;
 import org.nem.nac.datamodel.NacPersistenceRuntimeException;
 import org.nem.nac.datamodel.NemSQLiteHelper;
@@ -30,12 +35,15 @@ import org.nem.nac.ui.dialogs.EditFieldDialogFragment;
 import org.nem.nac.ui.utils.Toaster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import timber.log.Timber;
 
 public final class AccountListActivity extends NacBaseActivity {
-
+	private String TAG="AccountListActivity";
 	public static void start(Context context) {
 		final Intent intent = new Intent(context, AccountListActivity.class)
 				.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -63,11 +71,15 @@ public final class AccountListActivity extends NacBaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (_accountsListview != null && _accountsAdapter != null && _accountsAdapter.getIsEditMode()) {
-			toggleEditMode();
-		}
-		else {
-			finish();
+		if (Share.quitUriAppCall){  // go back to external Uri call
+			Share.uriData=null;
+			Share.feedBackCancel(this);
+		} else {
+			if (_accountsListview != null && _accountsAdapter != null && _accountsAdapter.getIsEditMode()) {
+				toggleEditMode();
+			} else {
+				finish();
+			}
 		}
 	}
 
@@ -95,6 +107,18 @@ public final class AccountListActivity extends NacBaseActivity {
 			_toolbarRightPanel.setClickable(true);
 			_toolbarRightPanel.setVisibility(View.VISIBLE);
 		}
+
+		// goto transaction if call from URi
+		if (Share.quitUriAppCall){
+			onBackPressed();
+		} else if (Share.uriData!=null && Share.uriData.getHost().equals("transaction")){
+			String address=Share.uriData.getQueryParameter("account");
+			if (address!=null)
+				if (address.length()>0){
+					startActivity(new Intent(this, DashboardActivity.class).putExtra(DashboardActivity.EXTRA_PARC_ACCOUNT_ADDRESS, new AddressValue(address)));
+				}
+		}
+		checkNextKeyBackup();
 	}
 
 	@Override
@@ -311,5 +335,82 @@ public final class AccountListActivity extends NacBaseActivity {
 			}
 		}
 		AddressInfoProvider.instance().invalidateLocal();
+	}
+
+
+	//////////// Reminder loop, ask to backup private keys ////////////////
+	private void checkNextKeyBackup(){
+		final AccountRepository accountRepository = new AccountRepository();
+		final List<Account> allAccounts = accountRepository.getAllSorted();
+		Map<String, Long> accountsArray=new HashMap<>();
+
+		if (allAccounts.size()==0)
+			return;
+
+		/////// add new added Account
+		Map<String, Long> nextBackList= AppSettings.instance().getKeynextBackup();
+		// get Preference storage for Each Account next Reminder Timestamp
+		for (Account acc:allAccounts){
+			String addr=acc.publicData.address.getRaw();
+			accountsArray.put(addr,0L);
+			if (!nextBackList.containsKey(addr)){  // if new account add to the Preference array
+				nextBackList.put(addr, 0L);
+			}
+		}
+		///// remove deleted Account in List
+		for(Iterator<Map.Entry<String, Long>> it = nextBackList.entrySet().iterator(); it.hasNext(); ) {
+			Map.Entry<String, Long> entry = it.next();
+			String addr = entry.getKey();  // Account
+			Long next = entry.getValue();  // next Reminder timestamp
+			long time= System.currentTimeMillis();  // timestamp now
+
+			if (!accountsArray.containsKey(addr)){  // remove if del from Account List
+				it.remove();  // remove if Account has been deleted
+			} else {  // or check time up?
+				if (time>next){  // show Reminder Alert Dialog if Now is larger than next Reminder Time.
+					Optional<Account> accOpt = accountRepository.find(AddressValue.fromValue(addr));
+					if (accOpt.isPresent()) {
+						saveKeyDialog(addr, accOpt.get().publicData.address.toNameOrDashed(), nextBackList);
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private void saveKeyDialog(String addr, String name, Map<String,Long> nextBackList){  // show Reminder dialog
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(getResources().getString(R.string.more_item_export_account)+ " - "+ getResources().getString(R.string.input_hint_private_key));
+		String txt= getResources().getString(R.string.dialog_backup_privatekey_warning);
+		txt +="\n\n"+getResources().getString(R.string.input_hint_create_account_name) +":\n"+ name;
+		builder.setMessage(txt);
+
+		builder.setPositiveButton(getResources().getString(R.string.text_OK), new DialogInterface.OnClickListener() { //text_OK
+			public void onClick(DialogInterface dialog, int which) {
+				long tm=System.currentTimeMillis();
+				long nextTime= tm+ AppConstants.Next_privatekey_backup_interval;
+				nextBackList.put(addr, nextTime);
+				AppSettings.instance().setKeynextBackup(nextBackList);
+
+				// set last Account, then go to export privatekey page
+				AppSettings.instance().saveLastUsedAccAddress(AddressValue.fromValue(addr));
+				Intent i = new Intent(AccountListActivity.this, ExportAccountActivity.class);
+				startActivity(i);
+				dialog.dismiss();
+			}
+		});
+
+		builder.setNegativeButton(getResources().getString(R.string.text_CANCEL), new DialogInterface.OnClickListener() { //text_CANCEL
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				long tm=System.currentTimeMillis();
+				long nextTime= tm+ AppConstants.Next_privatekey_backup_interval;
+				nextBackList.put(addr, nextTime);
+				AppSettings.instance().setKeynextBackup(nextBackList);
+				dialog.dismiss();
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.show();
 	}
 }

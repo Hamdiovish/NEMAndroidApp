@@ -90,12 +90,12 @@ public final class Xems {
 	//endregion
 
 	public static Xems fromXems(final double amount) {
-		final long micro = (long)(amount * 1000_000.0);
+		final long micro = (long)(Math.round(amount * 1000_000.0));
 		return new Xems(micro);
 	}
 
 	public static Xems fromXems(final long amount) {
-		return new Xems(amount * 1000_000);
+		return new Xems(Math.round(amount * 1000_000.0));
 	}
 
 	@JsonCreator

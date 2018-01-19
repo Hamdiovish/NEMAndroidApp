@@ -3,6 +3,7 @@ package org.nem.nac.models.transactions.drafts;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.nem.core.utils.HexEncoder;
 import org.nem.nac.application.AppConstants;
 import org.nem.nac.common.enums.TransactionType;
 import org.nem.nac.common.exceptions.NacException;
@@ -16,6 +17,8 @@ import org.nem.nac.providers.NodeInfoProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import timber.log.Timber;
 
 /**
  * Transaction draft that should be assembled, signed and then announced

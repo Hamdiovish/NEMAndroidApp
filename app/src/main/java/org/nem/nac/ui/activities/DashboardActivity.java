@@ -23,6 +23,7 @@ import org.nem.nac.R;
 import org.nem.nac.application.AppConstants;
 import org.nem.nac.application.AppHost;
 import org.nem.nac.application.AppSettings;
+import org.nem.nac.application.Share;
 import org.nem.nac.common.async.AsyncResult;
 import org.nem.nac.common.enums.AccountType;
 import org.nem.nac.common.enums.LastTransactionType;
@@ -54,7 +55,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import timber.log.Timber;
 
 public final class DashboardActivity extends NacBaseActivity {
-
+	private String TAG="DashboardActivity";
 	public static final  String EXTRA_PARC_ACCOUNT_ADDRESS           = DashboardActivity.class.getCanonicalName() + "account-address";
 	public static final  String EXTRA_BOOL_DONT_SHOW_UNSIGNED_PROMPT = DashboardActivity.class.getCanonicalName() + "dont-check-unconfirmed";
 	private static final String FRAG_TAG_NO_NETWORK_DIALOG           = DashboardActivity.class.getCanonicalName() + ".wifi-settings";
@@ -87,7 +88,12 @@ public final class DashboardActivity extends NacBaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		AccountListActivity.start(this);
+		if (Share.uriData!=null){
+			Share.quitUriAppCall=true;
+			Share.feedBackCancel(this);
+		} else {
+			AccountListActivity.start(this);
+		}
 	}
 
 	@Override
@@ -135,6 +141,18 @@ public final class DashboardActivity extends NacBaseActivity {
 		_nameLabel.setText(account.get().name);
 
 		_dashboardList.setOnItemClickListener(this::onMessageClick);
+
+		if (Share.uriData!=null && Share.uriData.getHost().equals("transaction")){
+			startActivity(new Intent(this, NewTransactionActivity.class));
+		}
+	}
+
+	@Override
+	protected void onStart() {
+		if (Share.quitUriAppCall){
+			onBackPressed();
+		}
+		super.onStart();
 	}
 
 	@Override

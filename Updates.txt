@@ -1,0 +1,204 @@
+{
+    'CHANGES': [{
+            'date': '20180116',
+            'description': 'Update the project gradle to the version from 3.3 to 4.1'
+        },
+        {
+            'date': '20180116',
+            'description': 'remove retrolambda plugin and codes from the build process, build.gradle, because lambda become supported by default since API 24',
+            'source': 'https://developer.android.com/studio/write/java8-support.html'
+        },
+        {
+            'date': '20180116',
+            'description': 'Update target sdk to the latest version from 25 to 27, build tools to the latest version from 25.0.0 to 27.0.3 and the target sdk to the latest from 25.0.0 to 27.0.3'
+        },
+        {
+            'date': '20180116',
+            'description': 'Update '
+        },
+        {
+            'date': '20180116',
+            'description': 'Update target dependencies: okhttp, gson, all the support libs, spongycastle'
+        }
+    ]
+}
+
+remove:
+		formUri = "http://blevx.com:5984/acra-xmnotes/_design/acra-storage/_update/report",
+		formUriBasicAuthLogin = "xmnotes",
+		formUriBasicAuthPassword = "qvod7370",
+
+01-16 23:12:06.701 32660-515/org.nem.nac.mainnet D/HttpClient: Request to http://hachi.nem.ninja:7890/account/transfers/all?address=NA4KN3LJKOEBOPARNIUDF65C2FPHX2WPIVYA7N67; Body:null
+01-16 23:12:06.796 32660-515/org.nem.nac.mainnet D/HttpClient: > Start
+01-16 23:12:06.796 32660-515/org.nem.nac.mainnet D/HttpClient: > Response from http://hachi.nem.ninja:7890/account/transfers/all?address=NA4KN3LJKOEBOPARNIUDF65C2FPHX2WPIVYA7N67 in 96.6ms: {"timeStamp":88553142,"error":"Bad Request","message":"a
+01-16 23:12:06.796 32660-515/org.nem.nac.mainnet D/HttpClient: > ddress must be valid","status":400}
+01-16 23:12:06.796 32660-515/org.nem.nac.mainnet D/HttpClient: < End
+01-16 23:12:06.796 32660-515/org.nem.nac.mainnet D/JsonUtils: Deserializing: {"timeStamp":88553142,"error":"Bad Request","message":"address must be valid","status":400}
+
+src.publicKey = "ad2c72f6320273330b4dac61435f71211df80dfdab75d585cd90ce203bb63589"
+src.address = "NB4LI3T5Z4MLXMSZ6XAPIGNGTIRGMSMYNHJPQHR3"
+
+address = "NB4LI3T5Z4MLXMSZ6XAPIGNGTIRGMSMYNHJPQHR3"
+name = "Lina"
+privateKey = {byte[64]@5808}
+publicKey = "ad2c72f6320273330b4dac61435f71211df80dfdab75d585cd90ce203bb63589"
+sortIndex = 1
+type = 0
+_id = {Long@5810} "2"
+shadow$_klass_ = {Class@4241} "class org.nem.nac.datamodel.entities.AccountEntity"
+shadow$_monitor_ = -2121029979
+
+<May old working>
+src.publicKey = "57c6fccacea03e05c11b50d755e60a07c6ec1eee204fc7834e790178068baa26"
+src.address = "NBFNBPTWROWBBFUGSI7XCKR33HAD74RONKDPQRD3"
+
+publicKey = {NacPublicKey@6123} "May"
+address = {AddressValue@6116} "NBFNBPTWROWBBFUGSI7XCKR33HAD74RONKDPQRD3"
+pubData = {PublicAccountData@6124}
+dst = {Account@6125} "May"
+src.sortIndex = 1
+dst.sortIndex = 1
+</May old workin>
+
+>generateEncoded TO TEST
+>issue entry detected: "Address ambiguity detected"
+>public AddressValue(@NonNull final String value)
+>public static boolean isValid(@Nullable final String value) {
+>>new version output:
+addressChecksum = {byte[4]@5832}
+  0 = -46
+  1 = -8
+  2 = 30
+  3 = 59
+ calculatedChecksum = {byte[4]@5876}
+  0 = -31
+  1 = -5
+  2 = 127
+  3 = -97
+
+>>old working version return:
+addressChecksum = {byte[4]@5835}
+ 0 = -46
+ 1 = -8
+ 2 = 30
+ 3 = 59
+calculatedChecksum = {byte[4]@5837}
+ 0 = -46
+ 1 = -8
+ 2 = 30
+ 3 = 59
+
+ > addressvalue.	private static byte[] generateChecksum(final byte[] input) {
+ >>New version issued:
+ input = {byte[21]@5832}
+  0 = 104
+  1 = 74
+  2 = -48
+  3 = -66
+  4 = 118
+  5 = -117
+  6 = -84
+  7 = 16
+  8 = -106
+  9 = -122
+  10 = -110
+  11 = 63
+  12 = 113
+  13 = 42
+  14 = 59
+  15 = -39
+  16 = -64
+  17 = 63
+  18 = -14
+  19 = 46
+  20 = 106
+ sha3StepThreeHash = {byte[32]@6200}
+  0 = 72
+  1 = -5
+  2 = -19
+  3 = 19
+  4 = 12
+  5 = -119
+  6 = -57
+  7 = -111
+  8 = 89
+  9 = 71
+  10 = 87
+  11 = 105
+  12 = 37
+  13 = -75
+  14 = 71
+  15 = 87
+  16 = 4
+  17 = 43
+  18 = 43
+  19 = -87
+  20 = -116
+  21 = 2
+  22 = 21
+  23 = -55
+  24 = -120
+  25 = -108
+  26 = 93
+  27 = -70
+  28 = -59
+  29 = 22
+  30 = -84
+  31 = 45
+
+  >> Old working version:
+input = {byte[21]@5834}
+ 0 = 104
+ 1 = 74
+ 2 = -48
+ 3 = -66
+ 4 = 118
+ 5 = -117
+ 6 = -84
+ 7 = 16
+ 8 = -106
+ 9 = -122
+ 10 = -110
+ 11 = 63
+ 12 = 113
+ 13 = 42
+ 14 = 59
+ 15 = -39
+ 16 = -64
+ 17 = 63
+ 18 = -14
+ 19 = 46
+ 20 = 106
+sha3StepThreeHash = {byte[32]@6094}
+ 0 = -122
+ 1 = -8
+ 2 = 68
+ 3 = 123
+ 4 = -49
+ 5 = -75
+ 6 = -97
+ 7 = -104
+ 8 = 8
+ 9 = 64
+ 10 = 122
+ 11 = 20
+ 12 = -63
+ 13 = 110
+ 14 = -38
+ 15 = -40
+ 16 = 15
+ 17 = -127
+ 18 = 8
+ 19 = 119
+ 20 = -123
+ 21 = 0
+ 22 = 122
+ 23 = 114
+ 24 = 64
+ 25 = -100
+ 26 = -47
+ 27 = -99
+ 28 = -98
+ 29 = -59
+ 30 = 47
+ 31 = -126

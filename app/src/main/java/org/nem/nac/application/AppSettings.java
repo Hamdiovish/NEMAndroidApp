@@ -2,14 +2,18 @@ package org.nem.nac.application;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.annimon.stream.Optional;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.nem.nac.BuildConfig;
 import org.nem.nac.R;
 import org.nem.nac.common.TimeSpan;
+import org.nem.nac.common.enums.NetworkVersion;
 import org.nem.nac.common.utils.ErrorUtils;
 import org.nem.nac.common.utils.StringUtils;
 import org.nem.nac.models.network.Server;
@@ -24,7 +28,9 @@ import org.nem.nac.ui.models.MoreItem;
 import org.nem.nac.ui.utils.Toaster;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,26 +52,39 @@ public final class AppSettings {
 	private static final String PREF_BOOL_NOTIFICATION_SOUND              = "PREF_BOOL_NOTIFICATION_SOUND";
 	private static final String PREF_BOOL_NOTIFICATION_VIBRATION          = "PREF_BOOL_NOTIFICATION_VIBRATION";
 	private static final String PREF_BOOL_NOTIFICATION_SHOW_ON_LOCKSCREEN = "PREF_BOOL_NOTIFICATION_SHOW_ON_LOCKSCREEN";
+	private static final String PREF_BOOL_PASSWORD              = "PASSWORD";
+	private static final String PREF_JSONSTR_KEYNEXT_BACKUP              = "KEYNEXT_BACKUP";
 
 	private static AppSettings _instance;
 
 	private static       List<MoreItem>       _moreItems           = new ArrayList<>();
 	private static       Map<String, Integer> _supportedLocalesRes = new LinkedHashMap<>();
 	private static final List<TimeSpan>       _updateIntervals     = new ArrayList<>();
-	private static final Server[]             _predefinedServers   = new Server[] {
-			new Server("http", "jusan.nem.ninja", AppConstants.DEFAULT_PORT),
-			new Server("http", "nijuichi.nem.ninja", AppConstants.DEFAULT_PORT),
-			new Server("http", "85.25.36.97", AppConstants.DEFAULT_PORT),
-			new Server("http", "62.75.171.41", AppConstants.DEFAULT_PORT),
-			new Server("http", "85.25.36.92", AppConstants.DEFAULT_PORT),
-			new Server("http", "199.217.112.135", AppConstants.DEFAULT_PORT),
-			new Server("http", "san.nem.ninja", AppConstants.DEFAULT_PORT),
-			new Server("http", "go.nem.ninja", AppConstants.DEFAULT_PORT),
-			new Server("http", "hachi.nem.ninja", AppConstants.DEFAULT_PORT),
-			new Server("http", "108.61.182.27", AppConstants.DEFAULT_PORT),
-			new Server("http", "104.238.161.61", AppConstants.DEFAULT_PORT),
-			new Server("http", "108.61.168.86", AppConstants.DEFAULT_PORT)
-	};
+	private static final Server[]             _predefinedServers = PredefinedServers();
+
+	private static Server[] PredefinedServers(){
+		if (BuildConfig.FLAVOR.equals("_testnet") || BuildConfig.FLAVOR.equals("_testnet_cn") ){
+			return new Server[] {  //kwl
+					new Server("http", "192.3.61.243", AppConstants.DEFAULT_PORT),
+					new Server("http", "50.3.87.123", AppConstants.DEFAULT_PORT)
+			};
+		} else {
+			return new Server[] {
+					new Server("http", "jusan.nem.ninja", AppConstants.DEFAULT_PORT),
+					new Server("http", "nijuichi.nem.ninja", AppConstants.DEFAULT_PORT),
+					new Server("http", "85.25.36.97", AppConstants.DEFAULT_PORT),
+					new Server("http", "62.75.171.41", AppConstants.DEFAULT_PORT),
+					new Server("http", "85.25.36.92", AppConstants.DEFAULT_PORT),
+					new Server("http", "199.217.112.135", AppConstants.DEFAULT_PORT),
+					new Server("http", "san.nem.ninja", AppConstants.DEFAULT_PORT),
+					new Server("http", "go.nem.ninja", AppConstants.DEFAULT_PORT),
+					new Server("http", "hachi.nem.ninja", AppConstants.DEFAULT_PORT),
+					new Server("http", "108.61.182.27", AppConstants.DEFAULT_PORT),
+					new Server("http", "104.238.161.61", AppConstants.DEFAULT_PORT),
+					new Server("http", "108.61.168.86", AppConstants.DEFAULT_PORT)
+			};
+		}
+	}
 
 	static {
 		_moreItems.add(new MoreItem(R.string.more_item_accounts, AccountListActivity::start));
@@ -107,6 +126,7 @@ public final class AppSettings {
 		_supportedLocalesRes.put("in", R.string.lang_name_in);
 		_supportedLocalesRes.put("it", R.string.lang_name_it);
 		_supportedLocalesRes.put("ja", R.string.lang_name_ja);
+		_supportedLocalesRes.put("ko", R.string.lang_name_ko);
 		_supportedLocalesRes.put("lt", R.string.lang_name_lt);
 		_supportedLocalesRes.put("nl", R.string.lang_name_nl);
 		_supportedLocalesRes.put("pl", R.string.lang_name_pl);
@@ -182,6 +202,38 @@ public final class AppSettings {
 		_sharedPreferences.edit().remove(PREF_PRIMARY_ADDRESS).apply();
 	}
 	//endregion
+
+	//  Finger print pw store
+	public synchronized void setPassword(String pw) {
+		_sharedPreferences.edit()
+				.putString(PREF_BOOL_PASSWORD, pw)
+				.apply();
+	}
+
+	public synchronized String getPassword() {
+		final String pw = _sharedPreferences.getString(PREF_BOOL_PASSWORD, null);
+		return pw;
+	}
+
+	//  Set App perference storage for next Reminder time
+	public synchronized void setKeynextBackup(Map<String, Long> nextBackList) {
+		if (nextBackList.size()==0)
+			return;
+		String json= new Gson().toJson(nextBackList);
+		_sharedPreferences.edit()
+				.putString(PREF_JSONSTR_KEYNEXT_BACKUP, json)
+				.apply();
+	}
+
+	public synchronized Map<String, Long> getKeynextBackup() {
+		Map<String, Long> nextBackList=new HashMap<>();
+		final String json = _sharedPreferences.getString(PREF_JSONSTR_KEYNEXT_BACKUP, null);
+		if (json==null)
+			return nextBackList;
+		Type type = new TypeToken<Map<String, Long>>(){}.getType();
+		Map<String, Long> map = new Gson().fromJson(json, type);
+		return map;
+	}
 
 	//region firstStart
 

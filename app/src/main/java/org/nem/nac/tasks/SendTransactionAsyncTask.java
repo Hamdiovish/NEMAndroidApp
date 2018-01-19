@@ -111,11 +111,13 @@ public final class SendTransactionAsyncTask
 		else {
 			serializedTransaction = _serializedTransaction.get();
 		}
+		Timber.d("Multisig: 110: "+HexEncoder.getString(serializedTransaction));
 
 		LogUtils.conditional(Log.WARN, LogTags.TRANSACTIONS.isLogged, LogTags.TRANSACTIONS.name, "Sending transaction:" + HexEncoder
 				.getString(serializedTransaction));
 
 		final SignedBinaryData signedTransaction = new SignedBinaryData(serializedTransaction, dsaSigner);
+		Timber.d("Multisig signature: 110: Transaction signed: "+signedTransaction.getSignatureHex());
 		Timber.d("Transaction signed");
 		final RequestAnnounceApiDto announceDto = new RequestAnnounceApiDto(signedTransaction);
 
