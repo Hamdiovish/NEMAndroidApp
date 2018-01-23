@@ -7,6 +7,7 @@ import org.nem.nac.crypto.KeyProvider;
 import org.nem.nac.models.BinaryData;
 import org.nem.nac.models.EncryptedNacPrivateKey;
 import org.nem.nac.models.NacPrivateKey;
+import org.nem.nac.models.NacPublicKey;
 
 public final class HEncryptDecryptTest {
 
@@ -46,5 +47,34 @@ public final class HEncryptDecryptTest {
         System.out.println("Encrypted1: " + encrypted1.toString());
         System.out.println("Decrypted key from Pub-version 1 OK");
     }
+
+    @Test
+    public void testHAddressesIsCorrect()
+            throws Exception {
+
+        final String expectedAddress = "NBFNBPTWROWBBFUGSI7XCKR33HAD74RONKDPQRD3";
+        final String expectedAddressDashed = "NBFNBP-TWROWB-BFUGSI-7XCKR3-3HAD74-RONKDP-QRD3";
+        final String expectedPubKey = "57c6fccacea03e05c11b50d755e60a07c6ec1eee204fc7834e790178068baa26";
+        final NacPrivateKey originalKey =
+                new NacPrivateKey("1db578e27316bb6cf00183f061f9a1e137c4b99feee22be7be7d173ff3d971ba");
+        final EncryptedNacPrivateKey encrypted1 = new EncryptedNacPrivateKey("9bdb7db8e2a97abc46d46f40c5a34d0011363aa4fe9e123e1fb89091dbd0c23054914424ebe79c9836a2a66bd29d097f11d32e9cfbedf7303a02b9ea893108cb");
+        final BinaryData salt1 = mockBinaryData("bee31024ca3dfcef8da9bbbb79c07d62ca4678aa593468aeaffb9887b9bd0a99");
+        final String pass1 = "123465";
+
+        final BinaryData eKeyDec1 = KeyProvider.deriveKey(pass1, salt1);
+        final NacPrivateKey decryptedKey1 = encrypted1.decryptKey(eKeyDec1);
+        Assert.assertArrayEquals("Decrypted key from Pub-version is different!", originalKey.getRaw(), decryptedKey1.getRaw());
+        System.out.println("Encrypted1: " + encrypted1.toString());
+        System.out.println("Decrypted key from Pub-version 1 OK");
+
+        final NacPublicKey publicKey = NacPublicKey.fromPrivateKey(decryptedKey1);
+        Assert.assertEquals("Public Keys are different!", publicKey.toPublicKey().toString(), expectedPubKey);
+        System.out.println("Public Keys match: " + publicKey.toPublicKey().toString());
+        Assert.assertEquals("Addresses are different!", publicKey.toAddress().toString(), expectedAddress);
+        System.out.println("Address: " + publicKey.toAddress().toString(false));
+        Assert.assertEquals("Addresses Dashed are different!", publicKey.toAddress().toString(true), expectedAddressDashed);
+        System.out.println("Address Dashed: " + publicKey.toAddress().toString(true));
+    }
+
 
 }

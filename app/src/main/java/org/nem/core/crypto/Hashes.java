@@ -42,14 +42,14 @@ public class Hashes {
 	 * @throws CryptoException if the hash operation failed.
 	 */
 	public static byte[] sha3_512(final byte[]... inputs) {
-		SHA3Digest digest = new SHA3Digest(512);
-		for (final byte[] input : inputs) {
-			digest.update(input, 0, input.length);
-		}
-		byte[] signature = new byte[512 / 8];
-		digest.doFinal(signature, 0);
-		return signature;
-		//return hash("SHA3-512", inputs);
+//		SHA3Digest digest = new SHA3Digest(512);
+//		for (final byte[] input : inputs) {
+//			digest.update(input, 0, input.length);
+//		}
+//		byte[] signature = new byte[512 / 8];
+//		digest.doFinal(signature, 0);
+//		return signature;
+		return hash("KECCAK-512", inputs);
 	}
 
 	/**
